@@ -30,7 +30,7 @@ test gate reports the coverage floor as not reached.
 ## Install
 
 ```sh
-pip install -e '.[dev]'
+pip install --config-settings editable_mode=strict -e '.[dev]'
 pybootstrap check
 ```
 
@@ -39,6 +39,12 @@ Python 3.12 or later is required. There are no runtime dependencies. The
 and the tools its gates drive: ruff for formatting and lint, pyright for
 type checking, and pytest with a coverage floor of 80%. Each tool also
 works on its own, for example `pytest` or `ruff check src tests`.
+
+The repository's `src` directory is the package itself, mapped to its
+import name in `pyproject.toml`. Strict editable mode gives that mapping a
+real `pybonsai/` directory under `build/`, which pyright needs to find the
+package. Tests import the installed package, so install before running
+them.
 
 ## Use
 
