@@ -50,7 +50,7 @@ class Host:
         raise NotImplementedError
 
     def attributes_of(self, value: object) -> frozenset[str] | None:
-        """The attributes readable on ``value``, or None if it is not a host value.
+        """Return the attributes readable on ``value``, or None for a non-host value.
 
         Matches on the exact type, not on subclasses, so a subclass must be
         registered on its own.
@@ -73,5 +73,5 @@ def make_host(
 
 
 def default_host() -> Host:
-    """The prelude only, with no host types. Used when no host is given."""
+    """Return a host with the prelude only and no host types."""
     raise NotImplementedError

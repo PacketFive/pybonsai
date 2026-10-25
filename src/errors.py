@@ -49,6 +49,7 @@ class EvaluationError(PyBonsaiError):
         lineno: int | None = None,
         col_offset: int | None = None,
     ) -> None:
+        """Store the message and the position it refers to."""
         super().__init__(message)
         self.message = message
         self.filename = filename
@@ -80,5 +81,6 @@ class LimitExceeded(EvaluationError):
         lineno: int | None = None,
         col_offset: int | None = None,
     ) -> None:
+        """Store the message and the position it refers to."""
         super().__init__(message, filename, lineno, col_offset)
         self.limit = limit

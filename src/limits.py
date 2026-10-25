@@ -40,6 +40,7 @@ class Budget:
     """
 
     def __init__(self, limits: Limits, filename: str) -> None:
+        """Start an empty budget for ``limits``, reporting errors against ``filename``."""
         self.limits = limits
         self.filename = filename
         self.nodes = 0

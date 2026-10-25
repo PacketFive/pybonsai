@@ -29,11 +29,12 @@ def build_prelude() -> FrozenMap:
 
 
 def pb_len(value: object) -> int:
+    """Return the length of a string, tuple, FrozenMap or frozenset."""
     raise NotImplementedError
 
 
 def pb_range(*args: int, limits: Limits) -> tuple[int, ...]:
-    """Like range, returned as a tuple.
+    """Return ``range(*args)`` as a tuple.
 
     Bounds must be ints. The length is computed first and checked against
     ``limits.max_collection_len`` before the tuple is built.
@@ -42,36 +43,42 @@ def pb_range(*args: int, limits: Limits) -> tuple[int, ...]:
 
 
 def pb_sorted(values: object, *, reverse: bool = False) -> tuple[object, ...]:
+    """Return the items sorted as a tuple; mixed types are a TypeError."""
     raise NotImplementedError
 
 
 def pb_min(*values: object) -> object:
+    """Return the smallest of the arguments, or of one collection argument."""
     raise NotImplementedError
 
 
 def pb_max(*values: object) -> object:
+    """Return the largest of the arguments, or of one collection argument."""
     raise NotImplementedError
 
 
 def pb_sum(values: object, start: int | float = 0) -> int | float:
-    """Numbers only. Summing strings or tuples is rejected; use ``"".join``."""
+    """Add numbers only; summing strings or tuples is rejected (use ``"".join``)."""
     raise NotImplementedError
 
 
 def pb_any(values: object) -> bool:
+    """Return True if any item of a collection is true."""
     raise NotImplementedError
 
 
 def pb_all(values: object) -> bool:
+    """Return True if every item of a collection is true."""
     raise NotImplementedError
 
 
 def pb_abs(value: int | float) -> int | float:
+    """Return the absolute value of a number."""
     raise NotImplementedError
 
 
 def pb_str(value: object) -> str:
-    """str() of a string, number, bool or None.
+    """Return str() of a string, number, bool or None.
 
     A host value uses its type's ``__str__``. Any other value is a TypeError,
     so tuples and mappings cannot be turned into text with Python's repr.
@@ -80,20 +87,25 @@ def pb_str(value: object) -> str:
 
 
 def pb_int(value: object) -> int:
+    """Convert a string, bool or float to int; floats are truncated as in Python."""
     raise NotImplementedError
 
 
 def pb_bool(value: object) -> bool:
+    """Return the truth value of a PyBonsai value."""
     raise NotImplementedError
 
 
 def pb_enumerate(values: object, start: int = 0) -> tuple[tuple[int, object], ...]:
+    """Return ``(index, item)`` pairs as a tuple, counting from ``start``."""
     raise NotImplementedError
 
 
 def pb_zip(*iterables: object) -> tuple[tuple[object, ...], ...]:
+    """Return tuples of corresponding items, stopping at the shortest collection."""
     raise NotImplementedError
 
 
 def pb_reversed(values: object) -> tuple[object, ...]:
+    """Return the items of a tuple or string in reverse order as a tuple."""
     raise NotImplementedError

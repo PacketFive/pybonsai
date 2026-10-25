@@ -45,12 +45,15 @@ class FrozenMap(Mapping[object, object]):
         raise NotImplementedError
 
     def __getitem__(self, key: object) -> object:
+        """Return the value for ``key``; a missing key raises KeyError."""
         raise NotImplementedError
 
     def __iter__(self) -> Iterator[object]:
+        """Iterate over keys in insertion order."""
         raise NotImplementedError
 
     def __len__(self) -> int:
+        """Return the number of keys."""
         raise NotImplementedError
 
     def __hash__(self) -> int:
@@ -58,21 +61,27 @@ class FrozenMap(Mapping[object, object]):
         raise NotImplementedError
 
     def __eq__(self, other: object) -> bool:
+        """Compare equal to another FrozenMap with the same items, in any order."""
         raise NotImplementedError
 
     def __repr__(self) -> str:
+        """Return ``FrozenMap({...})`` for debugging output."""
         raise NotImplementedError
 
     def get(self, key: object, default: object = None) -> object:
+        """Return the value for ``key``, or ``default`` if it is missing."""
         raise NotImplementedError
 
     def keys(self) -> tuple[object, ...]:  # type: ignore[override]
+        """Return the keys as a tuple in insertion order."""
         raise NotImplementedError
 
     def values(self) -> tuple[object, ...]:  # type: ignore[override]
+        """Return the values as a tuple in insertion order."""
         raise NotImplementedError
 
     def items(self) -> tuple[tuple[object, object], ...]:  # type: ignore[override]
+        """Return ``(key, value)`` pairs as a tuple in insertion order."""
         raise NotImplementedError
 
 

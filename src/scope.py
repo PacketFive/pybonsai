@@ -18,6 +18,7 @@ class Scope:
     def __init__(
         self, parent: Scope | None = None, names: Mapping[str, object] | None = None
     ) -> None:
+        """Create a scope holding ``names``, looking up misses in ``parent``."""
         self.parent = parent
         self._names: dict[str, object] = dict(names or {})
 

@@ -94,6 +94,7 @@ class Evaluator:
         raise NotImplementedError
 
     def eval_Constant(self, node: ast.Constant, scope: Scope) -> object:
+        """Return an int, float, str, bool or None literal; reject bytes and complex."""
         raise NotImplementedError
 
     def eval_JoinedStr(self, node: ast.JoinedStr, scope: Scope) -> str:
@@ -112,10 +113,11 @@ class Evaluator:
         raise NotImplementedError
 
     def eval_List(self, node: ast.List, scope: Scope) -> tuple[object, ...]:
-        """Same as a tuple, because lists are immutable in PyBonsai."""
+        """Evaluate as a tuple, because lists are immutable in PyBonsai."""
         raise NotImplementedError
 
     def eval_Set(self, node: ast.Set, scope: Scope) -> frozenset[object]:
+        """Build a frozenset from the elements, expanding Starred elements."""
         raise NotImplementedError
 
     def eval_Dict(self, node: ast.Dict, scope: Scope) -> FrozenMap:
@@ -123,6 +125,7 @@ class Evaluator:
         raise NotImplementedError
 
     def eval_Name(self, node: ast.Name, scope: Scope) -> object:
+        """Look the name up in ``scope``; an unknown name is an EvaluationError."""
         raise NotImplementedError
 
     def eval_BinOp(self, node: ast.BinOp, scope: Scope) -> object:
@@ -135,6 +138,7 @@ class Evaluator:
         raise NotImplementedError
 
     def eval_UnaryOp(self, node: ast.UnaryOp, scope: Scope) -> object:
+        """Apply ``-``, ``+`` or ``not`` to a number or bool."""
         raise NotImplementedError
 
     def eval_BoolOp(self, node: ast.BoolOp, scope: Scope) -> object:
@@ -146,6 +150,7 @@ class Evaluator:
         raise NotImplementedError
 
     def eval_IfExp(self, node: ast.IfExp, scope: Scope) -> object:
+        """Evaluate the test, then only the chosen branch."""
         raise NotImplementedError
 
     def eval_Call(self, node: ast.Call, scope: Scope) -> object:
@@ -165,16 +170,19 @@ class Evaluator:
         raise NotImplementedError
 
     def eval_ListComp(self, node: ast.ListComp, scope: Scope) -> tuple[object, ...]:
+        """Evaluate a list comprehension into a tuple."""
         raise NotImplementedError
 
     def eval_SetComp(self, node: ast.SetComp, scope: Scope) -> frozenset[object]:
+        """Evaluate a set comprehension into a frozenset."""
         raise NotImplementedError
 
     def eval_DictComp(self, node: ast.DictComp, scope: Scope) -> FrozenMap:
-        """A repeated key is an EvaluationError, as for dict literals."""
+        """Build a FrozenMap; a repeated key is an EvaluationError, as for dict literals."""
         raise NotImplementedError
 
     def eval_Lambda(self, node: ast.Lambda, scope: Scope) -> Function:
+        """Create a Function capturing ``scope``."""
         raise NotImplementedError
 
     # Calls and comprehensions

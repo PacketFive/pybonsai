@@ -133,5 +133,5 @@ class Checker(ast.NodeVisitor):
 
 
 def check(tree: ast.Module, filename: str, host_attributes: frozenset[str] = frozenset()) -> None:
-    """Convenience wrapper for ``Checker(filename, host_attributes).check(tree)``."""
+    """Run ``Checker(filename, host_attributes).check(tree)``."""
     raise NotImplementedError
