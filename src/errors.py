@@ -11,6 +11,14 @@ from __future__ import annotations
 import ast
 
 
+def _position(node: ast.AST) -> tuple[int | None, int | None]:
+    """Return the node's ``(lineno, col_offset)``, with None for what it lacks.
+
+    Operator and context nodes such as ``ast.Add`` carry no position.
+    """
+    return getattr(node, "lineno", None), getattr(node, "col_offset", None)
+
+
 class PyBonsaiError(Exception):
     """Base class for every error caused by a PyBonsai file."""
 
@@ -29,9 +37,13 @@ class RejectedSyntax(SyntaxError, PyBonsaiError):
 
         The message has the form ``"<NodeType> is not permitted: <reason>"``.
         ``lineno`` and ``col_offset`` are read from the node when it has them;
-        operator and context nodes have none.
+        operator and context nodes have none. SyntaxError counts columns
+        from 1, so ``offset`` is ``col_offset + 1``.
         """
-        raise NotImplementedError
+        lineno, col_offset = _position(node)
+        offset = None if col_offset is None else col_offset + 1
+        message = f"{type(node).__name__} is not permitted: {reason}"
+        return cls(message, (filename, lineno, offset, None))
 
 
 class EvaluationError(PyBonsaiError):
@@ -58,12 +70,26 @@ class EvaluationError(PyBonsaiError):
 
     @classmethod
     def at(cls, node: ast.AST, filename: str, message: str) -> EvaluationError:
-        """Build an error positioned at ``node``."""
-        raise NotImplementedError
+        """Build an error positioned at ``node``.
+
+        LimitExceeded takes the limit name first, so it is built with its
+        constructor and ``_position(node)`` instead of with this method.
+        """
+        lineno, col_offset = _position(node)
+        return cls(message, filename, lineno, col_offset)
 
     def __str__(self) -> str:
-        """Format as ``"<file>:<line>:<column>: <message>"``."""
-        raise NotImplementedError
+        """Format as ``"<file>:<line>:<column>: <message>"``.
+
+        The column counts from 1, as editors and SyntaxError do, while
+        ``col_offset`` keeps the 0-based value from the syntax tree. Parts of
+        the position that are unknown are left out.
+        """
+        if self.lineno is None:
+            return f"{self.filename}: {self.message}"
+        if self.col_offset is None:
+            return f"{self.filename}:{self.lineno}: {self.message}"
+        return f"{self.filename}:{self.lineno}:{self.col_offset + 1}: {self.message}"
 
 
 class LimitExceeded(EvaluationError):

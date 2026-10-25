@@ -33,6 +33,10 @@ version = { attr = "pybonsai.__version__" }
 packages = ["pybonsai"]
 package-dir = { pybonsai = "src" }
 
+# PEP 561 marker: the package ships its own type hints.
+[tool.setuptools.package-data]
+pybonsai = ["py.typed"]
+
 # Quality gates, run with 'pybootstrap check'. Sources, line length and
 # test paths are read from the tool tables below.
 [tool.pybootstrap]
