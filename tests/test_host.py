@@ -1,0 +1,92 @@
+# SPDX-License-Identifier: GPL-2.0
+"""Host tests: how an embedding program extends the language."""
+
+from dataclasses import dataclass
+
+import pytest
+
+from pybonsai import Builtin, EvaluationError, FrozenMap, Host, evaluate_source, make_host
+from pybonsai.host import default_host
+
+
+@dataclass(frozen=True)
+class Package:
+    name: str
+    version: str
+
+    def __str__(self) -> str:
+        return f"/store/{self.name}-{self.version}"
+
+
+def make_package(name: str, version: str) -> Package:
+    return Package(name, version)
+
+
+def package_host() -> Host:
+    return make_host(
+        names={"package": Builtin("package", make_package)},
+        types={Package: frozenset({"name", "version"})},
+    )
+
+
+def test_host_function_and_attributes() -> None:
+    result = evaluate_source(
+        "p = package('hello', '2.12')\nn = p.name\ns = f'{p}/bin'", host=package_host()
+    )
+    assert result["n"] == "hello"
+    assert result["s"] == "/store/hello-2.12/bin"
+    assert tuple(result.keys()) == ("p", "n", "s")
+
+
+def test_unlisted_host_attribute_is_rejected() -> None:
+    with pytest.raises(EvaluationError):
+        evaluate_source("p = package('a', '1')\nx = p.name.version", host=package_host())
+
+
+def test_host_attributes_reach_the_checker() -> None:
+    assert package_host().attribute_names() == frozenset({"name", "version"})
+
+
+def test_attributes_of_matches_exact_type() -> None:
+    class Sub(Package):
+        pass
+
+    host = package_host()
+    assert host.attributes_of(Package("a", "1")) == frozenset({"name", "version"})
+    assert host.attributes_of(Sub("a", "1")) is None
+
+
+def test_host_cannot_replace_prelude_names() -> None:
+    with pytest.raises(ValueError):
+        make_host(names={"len": Builtin("len", len)})
+
+
+def test_host_without_prelude() -> None:
+    host = make_host(include_prelude=False)
+    with pytest.raises(EvaluationError):
+        evaluate_source("x = len(())", host=host)
+
+
+@pytest.mark.parametrize(
+    ("names", "types", "error"),
+    [
+        ({"_x": Builtin("x", len)}, {}, ValueError),
+        ({"x": len}, {}, TypeError),
+        ({}, {"Package": frozenset()}, TypeError),
+        ({}, {Package: {"name"}}, TypeError),
+        ({}, {Package: frozenset({"_name"})}, ValueError),
+        ({}, {list: frozenset()}, TypeError),
+    ],
+)
+def test_host_validation(names: dict, types: dict, error: type[Exception]) -> None:
+    with pytest.raises(error):
+        Host(FrozenMap(names), FrozenMap(types))
+
+
+def test_host_fields_must_be_frozenmaps() -> None:
+    with pytest.raises(TypeError):
+        Host({}, FrozenMap())  # type: ignore[arg-type]
+
+
+def test_default_host_is_shared() -> None:
+    assert default_host() is default_host()

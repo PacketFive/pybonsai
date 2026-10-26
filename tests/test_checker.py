@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0
 """Checker tests: RFC 0001 sections 7.3 to 7.5.
 
-Each rejected snippet is one rule. A test that hits NotImplementedError is
-reported as xfail; once the code exists, a wrong answer is a real failure.
+Each rejected snippet is one rule.
 """
 
 import pytest
@@ -10,8 +9,6 @@ import pytest
 from pybonsai.checker import check
 from pybonsai.errors import RejectedSyntax
 from pybonsai.parser import parse
-
-pytestmark = pytest.mark.xfail(raises=NotImplementedError, reason="not implemented yet")
 
 
 def check_source(source: str) -> None:

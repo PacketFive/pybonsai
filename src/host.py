@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from functools import cache
 
 from .values import Builtin, FrozenMap
 
@@ -40,14 +41,39 @@ class Host:
         maps to a frozenset of attribute names, none starting with ``_``.
         Raises ValueError or TypeError naming the bad entry.
         """
-        raise NotImplementedError
+        if type(self.names) is not FrozenMap or type(self.types) is not FrozenMap:
+            raise TypeError("Host names and types must be FrozenMaps")
+        for name, value in self.names.items():
+            if type(name) is not str or not name.isidentifier() or name.startswith("_"):
+                raise ValueError(f"host name {name!r} is not a public identifier")
+            if type(value) is not Builtin:
+                raise TypeError(f"host name {name!r} must map to a Builtin")
+        for kind, attributes in self.types.items():
+            if not isinstance(kind, type):
+                raise TypeError(f"host type {kind!r} is not a class")
+            if kind.__hash__ is None:
+                raise TypeError(f"host type {kind.__name__} is not hashable")
+            if type(attributes) is not frozenset:
+                raise TypeError(f"attributes of host type {kind.__name__} must be a frozenset")
+            for attribute in attributes:
+                if (
+                    type(attribute) is not str
+                    or not attribute.isidentifier()
+                    or attribute.startswith("_")
+                ):
+                    raise ValueError(
+                        f"attribute {attribute!r} of host type {kind.__name__} is not public"
+                    )
 
     def attribute_names(self) -> frozenset[str]:
         """Every attribute name readable on at least one host type.
 
         The checker adds these to the language attribute allow list.
         """
-        raise NotImplementedError
+        names: frozenset[str] = frozenset()
+        for attributes in self.types.values():
+            names |= attributes  # type: ignore[operator]
+        return names
 
     def attributes_of(self, value: object) -> frozenset[str] | None:
         """Return the attributes readable on ``value``, or None for a non-host value.
@@ -55,7 +81,8 @@ class Host:
         Matches on the exact type, not on subclasses, so a subclass must be
         registered on its own.
         """
-        raise NotImplementedError
+        attributes = self.types.get(type(value))
+        return attributes  # type: ignore[return-value]
 
 
 def make_host(
@@ -69,9 +96,20 @@ def make_host(
     in ``names`` that repeats a prelude name raises ValueError, so a host
     cannot silently replace ``len`` or ``range``.
     """
-    raise NotImplementedError
+    from .prelude import build_prelude
+
+    combined: dict[object, object] = dict(build_prelude()) if include_prelude else {}
+    for name, value in (names or {}).items():
+        if name in combined:
+            raise ValueError(f"host name {name!r} repeats a prelude name")
+        combined[name] = value
+    return Host(FrozenMap(combined), FrozenMap(dict(types or {})))
 
 
+@cache
 def default_host() -> Host:
-    """Return a host with the prelude only and no host types."""
-    raise NotImplementedError
+    """Return a host with the prelude only and no host types.
+
+    The host is built once and shared, which is safe because it is immutable.
+    """
+    return make_host()

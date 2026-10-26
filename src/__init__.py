@@ -25,9 +25,12 @@ from __future__ import annotations
 
 import os
 
+from .checker import check
 from .errors import EvaluationError, LimitExceeded, PyBonsaiError, RejectedSyntax
+from .evaluator import Evaluator
 from .host import Host, default_host, make_host
 from .limits import DEFAULT_LIMITS, Limits
+from .parser import parse, require_supported_python
 from .values import Builtin, FrozenMap
 
 __version__ = "0.0.0"
@@ -66,7 +69,11 @@ def evaluate_source(
     from section 7.7 is reached. A file either evaluates completely or
     raises; there is no partial result.
     """
-    raise NotImplementedError
+    require_supported_python()
+    host = host if host is not None else default_host()
+    tree = parse(source, filename)
+    check(tree, filename, host.attribute_names())
+    return Evaluator(filename, host, limits).evaluate_module(tree)
 
 
 def evaluate_file(
@@ -79,4 +86,6 @@ def evaluate_file(
     The file is read here, before evaluation starts. The evaluator itself
     never touches the filesystem.
     """
-    raise NotImplementedError
+    with open(path, encoding="utf-8") as handle:
+        source = handle.read()
+    return evaluate_source(source, os.fspath(path), host, limits)

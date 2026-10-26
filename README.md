@@ -22,9 +22,8 @@ evaluation always finishes within fixed limits.
 
 ## Status
 
-Phase 1 skeleton. Every function has its signature and documentation, and
-its body raises `NotImplementedError`. The tests encode the RFC rules and
-are marked as expected failures until the code is written.
+Implemented. The parser, checker and evaluator follow RFC 0001 section 7,
+and the tests encode its rules. The coverage floor is 80%.
 
 ## Install
 
@@ -36,9 +35,9 @@ pybootstrap check
 Python 3.12 or later is required. There are no runtime dependencies. The
 `dev` extra installs [pybootstrap](https://github.com/packetfive/pybootstrap)
 and the tools its gates drive: ruff for formatting and lint, pyright for
-type checking, and pytest with coverage (0% during the skeleton, 80% from
-the end of Phase 1). Each tool also
-works on its own, for example `pytest` or `ruff check src tests`.
+type checking, pytest with coverage (at least 80%), and hypothesis for
+property tests. Each tool also works on its own, for example `pytest` or
+`ruff check src tests`.
 
 The repository's `src` directory is the package itself, mapped to its
 import name in `pyproject.toml`. Strict editable mode gives that mapping a

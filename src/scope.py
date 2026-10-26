@@ -11,6 +11,8 @@ from __future__ import annotations
 import ast
 from collections.abc import Mapping
 
+from .errors import EvaluationError
+
 
 class Scope:
     """One level of name bindings."""
@@ -24,7 +26,7 @@ class Scope:
 
     def child(self) -> Scope:
         """Return a new, empty scope whose parent is this one."""
-        raise NotImplementedError
+        return Scope(self)
 
     def define(self, name: str, value: object, node: ast.AST, filename: str) -> None:
         """Bind ``name`` in this scope.
@@ -33,7 +35,9 @@ class Scope:
         The checker rejects this case first; this check is a second line of
         defence.
         """
-        raise NotImplementedError
+        if name in self._names:
+            raise EvaluationError.at(node, filename, f"name {name!r} is already assigned")
+        self._names[name] = value
 
     def lookup(self, name: str, node: ast.AST, filename: str) -> object:
         """Return the value of ``name`` from this scope or the nearest parent.
@@ -41,8 +45,13 @@ class Scope:
         Raises EvaluationError naming the unknown name. Python builtins are
         never consulted.
         """
-        raise NotImplementedError
+        scope: Scope | None = self
+        while scope is not None:
+            if name in scope._names:
+                return scope._names[name]
+            scope = scope.parent
+        raise EvaluationError.at(node, filename, f"name {name!r} is not defined")
 
     def local_names(self) -> dict[str, object]:
         """Return a copy of the bindings made in this scope, in order."""
-        raise NotImplementedError
+        return dict(self._names)
