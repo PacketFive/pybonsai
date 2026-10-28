@@ -27,6 +27,17 @@ and the tests encode its rules. The coverage floor is 80%.
 
 ## Install
 
+The distribution is named `pybonsai-lang`, because the name `pybonsai`
+on PyPI belongs to an unrelated project. The import name is `pybonsai`.
+It is not on PyPI yet. To use it in another project, install it from its
+repository:
+
+```sh
+pip install git+https://github.com/PacketFive/pybonsai.git
+```
+
+To work on PyBonsai itself:
+
 ```sh
 pip install --config-settings editable_mode=strict -e '.[dev]'
 pybootstrap check

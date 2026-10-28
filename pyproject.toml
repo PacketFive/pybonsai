@@ -5,14 +5,31 @@ requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pybonsai"
+name = "pybonsai-lang"
 dynamic = ["version"]
 description = "PyBonsai, a hermetic subset of Python 3.12 interpreted from its syntax tree"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "GPL-2.0-only" }
 authors = [{ name = "PacketFive" }]
+keywords = ["configuration", "dsl", "hermetic", "deterministic", "starlark", "interpreter"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Interpreters",
+  "Topic :: System :: Systems Administration",
+  "Typing :: Typed",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/PacketFive/pybonsai"
+Source = "https://github.com/PacketFive/pybonsai"
+Issues = "https://github.com/PacketFive/pybonsai/issues"
 
 [project.optional-dependencies]
 # Everything the quality gates need. The pybootstrap name on PyPI belongs to
