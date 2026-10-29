@@ -29,22 +29,27 @@ and the tests encode its rules. The coverage floor is 80%.
 
 The distribution is named `pybonsai-lang`, because the name `pybonsai`
 on PyPI belongs to an unrelated project. The import name is `pybonsai`.
-It is not on PyPI yet. To use it in another project, install it from its
-repository:
+To use it in another project:
 
 ```sh
-pip install git+https://github.com/PacketFive/pybonsai.git
+pip install pybonsai-lang
 ```
+
+or add `pybonsai-lang>=1.0,<2` to the project's dependencies. Version 1
+keeps the language and the names in `pybonsai.__all__` stable: a file that
+evaluates under 1.0 gives the same values under every 1.x release.
 
 To work on PyBonsai itself:
 
 ```sh
-pip install --config-settings editable_mode=strict -e '.[dev]'
+python -m pip install --upgrade "pip>=25.1"
+pip install --group dev
+pip install --config-settings editable_mode=strict -e .
 pybootstrap check
 ```
 
 Python 3.12 or later is required. There are no runtime dependencies. The
-`dev` extra installs [pybootstrap](https://github.com/packetfive/pybootstrap)
+`dev` dependency group installs [pybootstrap](https://github.com/packetfive/pybootstrap)
 and the tools its gates drive: ruff for formatting and lint, pyright for
 type checking, pytest with coverage (at least 80%), and hypothesis for
 property tests. Each tool also works on its own, for example `pytest` or
@@ -55,6 +60,11 @@ import name in `pyproject.toml`. Strict editable mode gives that mapping a
 real `pybonsai/` directory under `build/`, which pyright needs to find the
 package. Tests import the installed package, so install before running
 them.
+
+Releases are made by pushing a tag `vX.Y.Z` that matches `__version__`
+and has a section in `CHANGELOG.md`. The release workflow runs the gates,
+builds the package, publishes it to PyPI through trusted publishing with
+attestations, and creates the GitHub release.
 
 ## Use
 
@@ -99,4 +109,4 @@ attributes a file may read. Without a host, a file sees only the prelude:
 
 ## License
 
-GPL-2.0-only.
+GPL-2.0-only. See [LICENSE](LICENSE).
