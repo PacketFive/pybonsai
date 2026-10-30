@@ -5,7 +5,16 @@ from dataclasses import dataclass
 
 import pytest
 
-from pybonsai import Builtin, EvaluationError, FrozenMap, Host, evaluate_source, make_host
+from pybonsai import (
+    Builtin,
+    EvaluationError,
+    FrozenMap,
+    Host,
+    LimitExceeded,
+    Limits,
+    evaluate_source,
+    make_host,
+)
 from pybonsai.host import default_host
 
 
@@ -142,3 +151,65 @@ def test_host_constant_must_be_a_value(value: object) -> None:
 def test_make_host_refuses_mutable_unknown_constant() -> None:
     with pytest.raises(TypeError):
         make_host(names={"x": object()})
+
+
+def _names(values: FrozenMap) -> dict[str, object]:
+    return {str(k): v for k, v in values.items()}
+
+
+LAYER = """
+SUFFIX = "!"
+
+def shout(text):
+    return text.upper() + SUFFIX
+
+def broken(x):
+    return x["missing"]
+
+def spin(n):
+    return [i for i in range(n)]
+"""
+
+
+def test_functions_pass_between_layers() -> None:
+    first = evaluate_source(LAYER, "first.pyb")
+    host = make_host({str(k): v for k, v in first.items() if k != "SUFFIX"})
+    second = evaluate_source(
+        "loud = shout('hi')\nlate = (lambda: shout)()\nboth = [shout, late]",
+        "second.pyb",
+        host=host,
+    )
+    assert second["loud"] == "HI!"
+    assert second["late"] is first["shout"]
+    with pytest.raises(EvaluationError, match="name 'SUFFIX' is not defined"):
+        evaluate_source("x = SUFFIX", "second.pyb", host=host)
+
+
+def test_errors_in_a_shared_function_name_its_file() -> None:
+    host = make_host(_names(evaluate_source(LAYER, "first.pyb")))
+    with pytest.raises(EvaluationError) as caught:
+        evaluate_source("\n\nx = broken({})", "second.pyb", host=host)
+    assert caught.value.filename == "first.pyb"
+    assert caught.value.lineno == 8
+    with pytest.raises(EvaluationError) as caught:
+        evaluate_source("x = shout()\ny = undefined", "second.pyb", host=host)
+    assert caught.value.filename == "second.pyb"
+    with pytest.raises(EvaluationError) as caught:
+        evaluate_source("x = shout('a')\ny = undefined", "second.pyb", host=host)
+    assert (caught.value.filename, caught.value.lineno) == ("second.pyb", 2)
+    with pytest.raises(LimitExceeded) as limit:
+        evaluate_source(
+            "x = spin(50)", "second.pyb", host=host, limits=Limits(max_collection_len=10)
+        )
+    assert limit.value.filename == "first.pyb"
+
+
+def test_a_shared_function_cannot_recurse_through_a_later_file() -> None:
+    first = evaluate_source("def apply(f, x):\n    return f(x)\n", "first.pyb")
+    host = make_host(_names(first))
+    with pytest.raises(EvaluationError, match="recursion into apply"):
+        evaluate_source(
+            "def again(x):\n    return apply(again, x)\ny = apply(again, 1)",
+            "second.pyb",
+            host=host,
+        )

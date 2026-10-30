@@ -130,6 +130,8 @@ class Function:
     ``node``: a function whose definition is already being called is
     rejected, even when it is a new Function object made by a later call,
     so the number of definitions in a file bounds the call depth.
+    ``filename`` is the file that defines it; errors in its body name that
+    file, also when a later evaluation calls it through a host name.
     """
 
     name: str
@@ -139,6 +141,7 @@ class Function:
     body: tuple[ast.stmt, ...] | ast.expr
     closure: Scope
     node: ast.FunctionDef | ast.Lambda
+    filename: str = "<string>"
 
 
 @dataclass(frozen=True)

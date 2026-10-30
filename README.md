@@ -96,6 +96,17 @@ host = make_host(names={"config": {"DEBUG": True}})
 evaluate_source("debug = config.get('DEBUG', False)", host=host)
 ```
 
+A host name may also hold a function that an earlier evaluation
+defined, so files can be evaluated in layers that build on one another.
+The function keeps the scope of its own file, and an error inside it
+names that file:
+
+```python
+first = evaluate_source("def greet(name):\n    return 'hello ' + name", "lib.pyb")
+host = make_host(names={"greet": first["greet"]})
+evaluate_source("message = greet('world')", "main.pyb", host=host)
+```
+
 Host types must be immutable and hashable, and each one lists the
 attributes a file may read. Without a host, a file sees only the prelude:
 `len`, `range`, `sorted`, `min`, `max`, `sum`, `any`, `all`, `abs`, `str`,

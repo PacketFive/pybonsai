@@ -382,8 +382,10 @@ class Evaluator:
         budget.enter_call(node)
         depth = budget.depth
         self.call_stack.append(callee)
+        caller = self.filename
         try:
             local = self.bind_arguments(callee, args, kwargs, node)
+            self.filename = budget.filename = callee.filename
             if isinstance(callee.body, ast.expr):
                 return self.eval(callee.body, local)
             self.exec_block(list(callee.body), local)
@@ -391,6 +393,7 @@ class Evaluator:
         except _Return as result:
             return result.value
         finally:
+            self.filename = budget.filename = caller
             self.call_stack.pop()
             budget.exit_call()
             budget.depth = depth
@@ -484,7 +487,7 @@ class Evaluator:
             }
         )
         body = node.body if isinstance(node, ast.Lambda) else tuple(node.body)
-        return Function(name, params, defaults, kw_defaults, body, scope, node)
+        return Function(name, params, defaults, kw_defaults, body, scope, node, self.filename)
 
     def _elements(self, nodes: list[ast.expr], scope: Scope) -> tuple[object, ...]:
         """Evaluate expressions in order, expanding ``*`` elements in place."""

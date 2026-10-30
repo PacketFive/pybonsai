@@ -33,7 +33,7 @@ from .limits import DEFAULT_LIMITS, Limits
 from .parser import parse, require_supported_python
 from .values import Builtin, FrozenMap
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 __all__ = [
     "DEFAULT_LIMITS",

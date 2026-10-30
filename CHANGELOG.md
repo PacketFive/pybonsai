@@ -4,6 +4,16 @@ All notable changes to PyBonsai are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-10-31
+
+### Added
+
+- A host name may hold a function defined by an earlier evaluation, so a
+  program can evaluate files in layers where each layer calls the
+  functions of the layers before it. The function runs in the scope it
+  was defined in, and an error or limit inside it names the file and line
+  that define it. Recursion through another file is still refused.
+
 ## [1.1.0] - 2026-10-30
 
 ### Added

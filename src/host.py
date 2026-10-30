@@ -6,7 +6,9 @@ such as Lattice, describes its additions with a Host:
 
 * ``names`` are the functions a file can call besides its own, normally
   the prelude plus the program's own functions, and any constants the
-  program gives the file, such as a mapping of options.
+  program gives the file, such as a mapping of options, and functions
+  that an earlier evaluation defined, so a program can evaluate files in
+  layers that build on one another.
 * ``types`` are the program's own value types, each with the attributes a
   file may read. Lattice registers ``Derivation`` here.
 
@@ -24,7 +26,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import cache
 
-from .values import _SCALARS, Builtin, FrozenMap
+from .values import _SCALARS, Builtin, FrozenMap, Function
 
 
 @dataclass(frozen=True)
@@ -39,8 +41,10 @@ class Host:
 
         Every name in ``names`` is an identifier that does not start with
         ``_`` and maps to a Builtin or to a PyBonsai value: a string,
-        number, bool, None, tuple, frozenset, FrozenMap or host type
-        instance, with only such values inside. Every key of ``types`` is a class and
+        number, bool, None, tuple, frozenset, FrozenMap, host type
+        instance or function, with only such values inside. A function
+        comes from an earlier evaluation and runs in the scope it was
+        defined in. Every key of ``types`` is a class and
         maps to a frozenset of attribute names, none starting with ``_``.
         Raises ValueError or TypeError naming the bad entry.
         """
@@ -91,7 +95,7 @@ class Host:
 def _is_value(value: object, types: FrozenMap) -> bool:
     """Return whether ``value`` is an immutable PyBonsai value a file may read."""
     kind = type(value)
-    if kind in _SCALARS or kind in types:
+    if kind in _SCALARS or kind in types or kind is Function:
         return True
     if kind is tuple or kind is frozenset:
         return all(_is_value(item, types) for item in value)  # type: ignore[attr-defined]
