@@ -87,6 +87,15 @@ host = make_host(
 evaluate_source("y = double(21)", host=host)
 ```
 
+A host can also give a file constants, such as a mapping of options,
+which the file reads like any other name. A dict or list given here
+reaches the file as a read-only mapping or tuple:
+
+```python
+host = make_host(names={"config": {"DEBUG": True}})
+evaluate_source("debug = config.get('DEBUG', False)", host=host)
+```
+
 Host types must be immutable and hashable, and each one lists the
 attributes a file may read. Without a host, a file sees only the prelude:
 `len`, `range`, `sorted`, `min`, `max`, `sum`, `any`, `all`, `abs`, `str`,

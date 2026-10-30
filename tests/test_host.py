@@ -90,3 +90,55 @@ def test_host_fields_must_be_frozenmaps() -> None:
 
 def test_default_host_is_shared() -> None:
     assert default_host() is default_host()
+
+
+def test_host_constants_are_readable() -> None:
+    host = make_host(
+        names={"config": {"DEBUG": True, "LEVELS": [1, 2]}, "release": "1.0"},
+        types={Package: frozenset({"name", "version"})},
+    )
+    result = evaluate_source(
+        "debug = config.get('DEBUG', False)\n"
+        "missing = config.get('OTHER', 3)\n"
+        "levels = config['LEVELS']\n"
+        "r = release",
+        host=host,
+    )
+    assert result["debug"] is True
+    assert result["missing"] == 3
+    assert result["levels"] == (1, 2)
+    assert result["r"] == "1.0"
+    assert tuple(result.keys()) == ("debug", "missing", "levels", "r")
+    assert type(host.names["config"]) is FrozenMap
+
+
+def test_host_constant_holds_host_values() -> None:
+    host = make_host(
+        names={"pkg": Package("a", "1")},
+        types={Package: frozenset({"name", "version"})},
+    )
+    assert evaluate_source("n = pkg.name", host=host)["n"] == "a"
+
+
+def test_file_may_shadow_a_host_constant() -> None:
+    host = make_host(names={"config": {}})
+    assert evaluate_source("config = 1", host=host)["config"] == 1
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        FrozenMap({"f": Builtin("f", len)}),
+        (object(),),
+        frozenset({Package("a", "1")}),
+        FrozenMap({Package("a", "1"): 1}),
+    ],
+)
+def test_host_constant_must_be_a_value(value: object) -> None:
+    with pytest.raises(TypeError):
+        Host(FrozenMap({"x": value}), FrozenMap())
+
+
+def test_make_host_refuses_mutable_unknown_constant() -> None:
+    with pytest.raises(TypeError):
+        make_host(names={"x": object()})

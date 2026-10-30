@@ -5,7 +5,8 @@ PyBonsai knows nothing about packages or builds. A program that embeds it,
 such as Lattice, describes its additions with a Host:
 
 * ``names`` are the functions a file can call besides its own, normally
-  the prelude plus the program's own functions.
+  the prelude plus the program's own functions, and any constants the
+  program gives the file, such as a mapping of options.
 * ``types`` are the program's own value types, each with the attributes a
   file may read. Lattice registers ``Derivation`` here.
 
@@ -23,7 +24,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import cache
 
-from .values import Builtin, FrozenMap
+from .values import _SCALARS, Builtin, FrozenMap
 
 
 @dataclass(frozen=True)
@@ -37,7 +38,9 @@ class Host:
         """Validate the host.
 
         Every name in ``names`` is an identifier that does not start with
-        ``_`` and maps to a Builtin. Every key of ``types`` is a class and
+        ``_`` and maps to a Builtin or to a PyBonsai value: a string,
+        number, bool, None, tuple, frozenset, FrozenMap or host type
+        instance, with only such values inside. Every key of ``types`` is a class and
         maps to a frozenset of attribute names, none starting with ``_``.
         Raises ValueError or TypeError naming the bad entry.
         """
@@ -46,8 +49,8 @@ class Host:
         for name, value in self.names.items():
             if type(name) is not str or not name.isidentifier() or name.startswith("_"):
                 raise ValueError(f"host name {name!r} is not a public identifier")
-            if type(value) is not Builtin:
-                raise TypeError(f"host name {name!r} must map to a Builtin")
+            if type(value) is not Builtin and not _is_value(value, self.types):
+                raise TypeError(f"host name {name!r} must map to a Builtin or a PyBonsai value")
         for kind, attributes in self.types.items():
             if not isinstance(kind, type):
                 raise TypeError(f"host type {kind!r} is not a class")
@@ -85,8 +88,23 @@ class Host:
         return attributes  # type: ignore[return-value]
 
 
+def _is_value(value: object, types: FrozenMap) -> bool:
+    """Return whether ``value`` is an immutable PyBonsai value a file may read."""
+    kind = type(value)
+    if kind in _SCALARS or kind in types:
+        return True
+    if kind is tuple or kind is frozenset:
+        return all(_is_value(item, types) for item in value)  # type: ignore[attr-defined]
+    if kind is FrozenMap:
+        return all(
+            _is_value(k, types) and _is_value(v, types)
+            for k, v in value.items()  # type: ignore[attr-defined]
+        )
+    return False
+
+
 def make_host(
-    names: Mapping[str, Builtin] | None = None,
+    names: Mapping[str, object] | None = None,
     types: Mapping[type, frozenset[str]] | None = None,
     include_prelude: bool = True,
 ) -> Host:
@@ -94,16 +112,21 @@ def make_host(
 
     With ``include_prelude`` the prelude functions are added first. A name
     in ``names`` that repeats a prelude name raises ValueError, so a host
-    cannot silently replace ``len`` or ``range``.
+    cannot silently replace ``len`` or ``range``. A value in ``names`` that
+    is not a Builtin is passed through values.freeze first, so a dict or
+    list given here reaches the file as a FrozenMap or tuple.
     """
     from .prelude import build_prelude
+    from .values import freeze
 
+    host_types = FrozenMap(dict(types or {}))
+    probe = Host(FrozenMap(), host_types)
     combined: dict[object, object] = dict(build_prelude()) if include_prelude else {}
     for name, value in (names or {}).items():
         if name in combined:
             raise ValueError(f"host name {name!r} repeats a prelude name")
-        combined[name] = value
-    return Host(FrozenMap(combined), FrozenMap(dict(types or {})))
+        combined[name] = value if type(value) is Builtin else freeze(value, probe)
+    return Host(FrozenMap(combined), host_types)
 
 
 @cache
