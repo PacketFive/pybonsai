@@ -45,11 +45,11 @@ To work on PyBonsai itself:
 python -m pip install --upgrade "pip>=25.1"
 pip install --group dev
 pip install --config-settings editable_mode=strict -e .
-pybootstrap check
+coldframe check
 ```
 
 Python 3.12 or later is required. There are no runtime dependencies. The
-`dev` dependency group installs [pybootstrap](https://github.com/packetfive/pybootstrap)
+`dev` dependency group installs [coldframe](https://pypi.org/project/coldframe/)
 and the tools its gates drive: ruff for formatting and lint, pyright for
 type checking, pytest with coverage (at least 80%), and hypothesis for
 property tests. Each tool also works on its own, for example `pytest` or
